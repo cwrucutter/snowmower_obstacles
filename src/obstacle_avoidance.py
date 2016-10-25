@@ -92,8 +92,18 @@ class ObstacleAvoidance:
                     yield point
         else:
             # curved case
-            r = v / w
+            travel_r = v / w
+            min_avoidance_r = travel_r - self.MAX_WIDTH/2.0
+            max_avoidance_r = travel_r + self.MAX_WIDTH/2.0
             for point in points:
+                dx_robot = point.r * sin(point.theta)
+                dy_robot = point.r * cos(point.theta)
+                dx_turning = dx_robot + travel_r
+
+                point_turing_radius = math.sqrt(math.pow(dx_turning, 2)+math.pow(dy_robot, 2))
+                
+            if (point_turning_radius > min_avoidance_r and
+                    point_turning_radius < max_avoidance_r):
                 yield point
 
     def select_closest_obstacles(self, v, w, points):
