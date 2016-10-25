@@ -26,8 +26,13 @@ import rospy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 
+from collections import namedtuple
+
+Obstacle = namedtuple('Obstacle', ['r', 'theta'])
+
 class ObstacleAvoidance:
     def __init__(self):
+        self.last_scan = []
         rospy.init_node('obstacle_avoidance')
         # input is lidar data
         lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
@@ -39,13 +44,33 @@ class ObstacleAvoidance:
         outVelTopic = rospy.get_param('~out_vel_topic', 'cmd_vel')
         self.velPub = rospy.Publisher(outVelTopic, Twist, queue_size = 1)
 
-    def obsDetect(self, msg):
+    def obsDetect(self, msg: LaserScan):
         # Detect obstacles using incoming LIDAR scan
-        a = 0
+        self.last_scan = msg
+        min_angle = msg.angle_min
+        max_angle = msg.angle_max
+        angle_increment = msg.angle_increment
+        readings = []
+        for index, range_ in enumerate(msg.ranges):
+            angle = min_angle + index*angle_increment
+            r = range_
+            readings.append(Obstacle(r=r, theta=angle))
+        self.last_readings = readings
         
-    def obsAvoid(self, msg):
+    def obsAvoid(self, msg: Twist):
         # Create a twist message
         vel_cmd = Twist()
+
+        # Filter out points that are outside the travel circle
+        
+        # Identify the (0, 1, 2) points that need to be avoided
+
+        left = Obstacle(r=1, theta=0.5)
+        right = Obstacle(r=1.5, theta=0.75)
+        # Calculate the minimum change to avoid those points
+
+        # Choose that as the adjustment to make to cmd_vel
+
         # Do stuff (Currently just a pass through.)
         vel_cmd.linear.x = msg.linear.x
         vel_cmd.angular.z = msg.angular.z
