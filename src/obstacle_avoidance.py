@@ -24,24 +24,31 @@
 
 import rospy
 from geometry_msgs.msg import Twist
-from snowmower_msgs.msg import ObstacleMsg
-from snowmower_msgs.msg import ObstacleArray
+from sensor_msgs.msg import LaserScan
 
 class ObstacleAvoidance:
     def __init__(self):
         rospy.init_node('obstacle_avoidance')
-        # input is obstacle arrays from obstacle detection node
-        obsTopic = rospy.get_param('~obs_topic', 'obs/data')
-        rospy.Subscriber(obsTopic, ObstacleArray, self.obsAvoid)
+        # input is lidar data
+        lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
+        rospy.Subscriber(lidarTopic, LaserScan, self.obsDetect)
+        # and commanded velocity (pre obstaacle detection)
+        inVelTopic = rospy.get_param('~in_vel_topic', 'cmd_vel_pre')
+        rospy.Subscriber(inVelTopic, Twist, self.obsAvoid)
         # output is velocity command (to avoid the obstacle)
-        velTopic = rospy.get_param('~vel_topic', 'cmd_vel')
-        self.velPub = rospy.Publisher(velTopic, Twist, queue_size = 1)
+        outVelTopic = rospy.get_param('~out_vel_topic', 'cmd_vel')
+        self.velPub = rospy.Publisher(outVelTopic, Twist, queue_size = 1)
+
+    def obsDetect(self, msg):
+        # Detect obstacles using incoming LIDAR scan
+        a = 0
+        
     def obsAvoid(self, msg):
         # Create a twist message
         vel_cmd = Twist()
-        # Do stuff
-        vel_cmd.linear.x = 0
-        vel_cmd.angular.z = 0
+        # Do stuff (Currently just a pass through.)
+        vel_cmd.linear.x = msg.linear.x
+        vel_cmd.angular.z = msg.angular.z
         # Publish velocity command to avoid obstacle
         self.velPub.publish(vel_cmd)
 
