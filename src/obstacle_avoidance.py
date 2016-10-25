@@ -23,6 +23,9 @@
 # SOFTWARE.
 
 import rospy
+import math
+from math import sin, cos
+
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 
@@ -34,6 +37,9 @@ class ObstacleAvoidance:
     def __init__(self):
         self.last_scan = []
         rospy.init_node('obstacle_avoidance')
+
+        self.MAX_WIDTH = rospy.get_param('~maximum_width', 1)
+
         # input is lidar data
         lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
         rospy.Subscriber(lidarTopic, LaserScan, self.obsDetect)
@@ -62,11 +68,10 @@ class ObstacleAvoidance:
         vel_cmd = Twist()
 
         # Filter out points that are outside the travel circle
-        
+        filtered_points = self.filter_by_drive_circle(
+            msg.linear.x, msg.angular.z, self.last_readings)
         # Identify the (0, 1, 2) points that need to be avoided
-
-        left = Obstacle(r=1, theta=0.5)
-        right = Obstacle(r=1.5, theta=0.75)
+        left, right = self.select_closest_obstacles(v, w, filtered_points)
         # Calculate the minimum change to avoid those points
 
         # Choose that as the adjustment to make to cmd_vel
@@ -76,6 +81,30 @@ class ObstacleAvoidance:
         vel_cmd.angular.z = msg.angular.z
         # Publish velocity command to avoid obstacle
         self.velPub.publish(vel_cmd)
+
+    def filter_by_drive_circle(self, v, w, points):
+        if (abs(w) < 0.001):
+            # drive stright case
+            for point in points:
+                dx = point.r * sin(point.theta)
+                dy = point.r * cos(point.theta)
+                if abs(dx) < self.MAX_WIDTH / 2.:
+                    yield point
+        else:
+            # curved case
+            r = v / w
+            for point in points:
+                yield point
+
+    def select_closest_obstacles(self, v, w, points):
+        if len(points) <= 0:
+            return (None, None,)
+        elif len(points) == 1:
+            return (points[0], points[0])
+        
+        for index, point in enumerate(points):
+            pass
+        return (points[0], points[1],)
 
 if __name__ == "__main__":
     oa = ObstacleAvoidance()
