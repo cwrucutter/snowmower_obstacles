@@ -1,0 +1,10 @@
+<launch>
+  <!-- Launch the path, leader, and driver for navigation. -->
+  <node pkg="drive_stack" type="path.py" name="path" output="screen"/>
+  <node pkg="drive_stack" type="leader_nonlinear_force.py" name="leader" output="screen"/>
+  <node pkg="drive_stack" type="driver_pseudolinear.py" name="driver" output="screen">
+    <remap from="cmd_vel" to="cmd_vel_pre"/>
+  </node>
+  <!-- Launch the obstacle avoidance node. -->
+  <node pkg="snowmower_obstacles" type="obstacle_avoidance.py" name="obs_avoid" output="screen"/>
+</launch>
