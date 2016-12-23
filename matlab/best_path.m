@@ -1,11 +1,14 @@
-% This code creates  obstacle at some random point in front of the robot.
+% This code creates obstacles at random points in front of the robot.
 % It then calculates the radius of the constant curvature path that
 % intersects with that point. Finally, it plots the obstacle and the path.
 
 %% Create 'num_obs' obstacles at random x,y locations in front of the robot.
 num_obs = 10;
+% Define the box in front of the robot (0:xmax,-ymax:ymax)
 xmax = 10;
 ymax = 10;
+% store random x and y points of obstacles in two arrays
+% _tot suffix is used to designate these as all teh obstacles
 x_obs_tot = xmax*rand(num_obs,1);
 y_obs_tot = 2*ymax*rand(num_obs,1)-ymax;
 
@@ -16,10 +19,14 @@ half_width = max_width/2;
 % Commanded linear and angular velocity pre-obstacle avoidance
 v_pre = 2;
 omega_pre = .1;
+% And the radius of curvature
 R_pre = v_pre/omega_pre;
 
 % Find which obstacles are in the path
-% TODO: Add distance filter as well (only worry about close obstacles)
+% TODO: Add distance filter as well (only worry about close
+% obstacles)
+% The robot drives along a circle defined by R_pre. An inner and
+% outer circle are offset from this by half_width.
 in_path = sqrt(x_obs_tot.^2+(R_pre-y_obs_tot).^2)>=(R_pre-half_width) & ...
           sqrt(x_obs_tot.^2+(R_pre-y_obs_tot).^2)<=(R_pre+half_width);
 x_obs = x_obs_tot(in_path);
