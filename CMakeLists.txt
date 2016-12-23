@@ -11,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   tf2_ros
   snowmower_msgs
-  drive_stack
 )
 
 ## System dependencies are found with CMake's conventions
