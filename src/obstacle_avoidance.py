@@ -62,7 +62,7 @@ class ObstacleAvoidance:
             r = range_
             readings.append(Obstacle(r=r, theta=angle))
         self.last_readings = readings
-        
+
     def obsAvoid(self, msg: Twist):
         # Create a twist message
         vel_cmd = Twist()
@@ -101,7 +101,7 @@ class ObstacleAvoidance:
                 dx_turning = dx_robot + travel_r
 
                 point_turing_radius = math.sqrt(math.pow(dx_turning, 2)+math.pow(dy_robot, 2))
-                
+
             if (point_turning_radius > min_avoidance_r and
                     point_turning_radius < max_avoidance_r):
                 yield point
@@ -111,7 +111,7 @@ class ObstacleAvoidance:
             return (None, None,)
         elif len(points) == 1:
             return (points[0], points[0])
-        
+
         for index, point in enumerate(points):
             pass
         return (points[0], points[1],)
