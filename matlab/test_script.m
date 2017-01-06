@@ -13,9 +13,9 @@ plot(X(:,1),X(:,2))
 axis equal
 %% Test calcDxDyDthetaFromGoalInGoalFrame
 currentPose = [0, 0, 0];
-goalPose = [1, -1, -pi/4-0.1];
+goalPose = [-1, -1, -pi/4-.1];
 [dx, dy, dtheta] = calcDxDyDthetaFromGoalInGoalFrame(currentPose, goalPose);
-disp(sprintf('dx = %g, dy = %g, dtheta = %g',dx,dy,dtheta));
+fprintf('dx = %g, dy = %g, dtheta = %g\n',dx,dy,dtheta);
 figure(3)
 % plot x-axis of currentPose frame
 plot([currentPose(1) currentPose(1)+cos(currentPose(3))], [currentPose(2) currentPose(2)+sin(currentPose(3))])
