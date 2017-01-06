@@ -4,9 +4,9 @@ X0 = [x; y; theta];
 % Timing
 tf = 5;
 
-v = @(x) 1;
-omega = @(x) 1;
-[T,X] = simulateKinematics(X0, tf, v, omega);
+v = @(x,goalPose) 1;
+omega = @(x,goalPose) 1;
+[T,X] = simulateKinematics(X0, tf, goalPose, v, omega);
 % Plot
 figure(2)
 plot(X(:,1),X(:,2))
