@@ -1,11 +1,10 @@
-function [T,X] = simulateKinematics(X0,tf,dvdt,dwdt)
+function [T,X] = simulateKinematics(X0,tf,v,omega)
 
 % Differential equations that determine state
-dxdt =@(t,x) [x(4)*cos(x(3)); ...   % dx/dt
-              x(4)*sin(x(3)); ...   % dy/dt
-              x(5); ...             % dtheta/dt
-              dvdt(x); ...                % dv/dt
-              dwdt(x)];                   % dw/dt
+dxdt =@(t,x) [v(x)*cos(x(3)); ...   % dx/dt
+              v(x)*sin(x(3)); ...   % dy/dt
+              omega(x)];            % dtheta/dt
+
 % Timing (in seconds)
 ti=0; tspan=[ti tf];
 
