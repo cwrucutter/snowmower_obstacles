@@ -1,12 +1,12 @@
 % Initialize state
-x = 0; y = 0; theta = 0; v = 1; omega = 1;
-X0 = [x; y; theta; v; omega];
+x = 0; y = 0; theta = 0;
+X0 = [x; y; theta];
 % Timing
 tf = 5;
 
-dvdt = @(x) 0;
-dwdt = @(x) 0;
-[T,X] = simulateKinematics(X0, tf, dvdt, dwdt);
+v = @(x) 1;
+omega = @(x) 1;
+[T,X] = simulateKinematics(X0, tf, v, omega);
 % Plot
 figure(2)
 plot(X(:,1),X(:,2))
