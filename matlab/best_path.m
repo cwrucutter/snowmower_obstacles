@@ -29,6 +29,7 @@ R_pre = v_pre/omega_pre;
 % outer circle are offset from this by half_width.
 in_path = @(x,y,r,w) sqrt(x.^2+(r-y).^2)>=(r-w/2) & ...
                      sqrt(x.^2+(r-y).^2)<=(r+w/2);
+in_path_pre = in_path(x_obs_tot,y_obs_tot,R_pre,max_width);
 x_obs = x_obs_tot(:);
 y_obs = y_obs_tot(:);
 
@@ -72,14 +73,14 @@ while dist < max_width && n > 1
     n = n-1;
     dist = sqrt((table_right(n,2)-table_right(n-1,2))^2+(table_right(n,3)-table_right(n-1,3))^2);
 end
-curvRight = table_left(n,5);
+curvRight = table_right(n,5);
 
 leftOrRight = abs(curvLeft-1/R_pre) < abs(curvRight-1/R_pre);
 curvBest = leftOrRight*curvLeft + (~leftOrRight)*curvRight;
 omegaBest = v_pre*curvBest;
 RBest = 1/curvBest;
 
-if sum(in_path)<0.5
+if sum(in_path_pre)<0.5
     RBest = R_pre;
 end
 
