@@ -33,10 +33,10 @@ end
 function dtheta = calcDthetaFromGoalInGoalFrame(currentPose, goalPose)
 % Calculate the angle of the goal heading relative to the current heading.
 % dtheta should lie in the semi-closed interval [-pi, pi)
-dtheta = wrapAngleFromNegativepiTopi(goalPose(3)-currentPose(3));
+dtheta = wrapAngleFromNegativePiToPi(currentPose(3)-goalPose(3));
 end
 
-function wrappedAngle = wrapAngleFromNegativepiTopi(angle)
+function wrappedAngle = wrapAngleFromNegativePiToPi(angle)
 % Wrap an angle such that it lies in the semi-closed interval [-pi, pi).
 % If the angle is greater than or equal to pi, subtract pi until it isn't.
 while angle >= pi

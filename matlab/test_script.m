@@ -3,13 +3,20 @@ x = 0; y = 0; theta = 0;
 X0 = [x; y; theta];
 % Timing
 tf = 5;
+goalPose = [.5, .5, pi/4];
 
-v = @(x,goalPose) 1;
-omega = @(x,goalPose) 1;
-[T,X] = simulateKinematics(X0, tf, goalPose, v, omega);
+v = @linearVelocityPsuedoLinear;
+w = @angularVelocityPsuedoLinear;
+
+[T,X] = simulateKinematics(X0, tf, goalPose, v, w);
 % Plot
 figure(2)
 plot(X(:,1),X(:,2))
+hold on
+plot([goalPose(1) goalPose(1)+cos(goalPose(3))], [goalPose(2) goalPose(2)+sin(goalPose(3))])
+% plot y-axis of goalPose frame
+plot([goalPose(1) goalPose(1)-0.5*sin(goalPose(3))], [goalPose(2) goalPose(2)+0.5*cos(goalPose(3))])
+hold off
 axis equal
 %% Test calcDxDyDthetaFromGoalInGoalFrame
 currentPose = [0, 0, 0];
