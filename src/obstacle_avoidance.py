@@ -38,19 +38,20 @@ class ObstacleAvoidance:
         self.last_scan = []
         rospy.init_node('obstacle_avoidance')
 
-        self.MAX_WIDTH = rospy.get_param('~maximum_width', 1)
+        self.PATH_WIDTH = rospy.get_param('~path_width', 1)
+        self.R_MAX = rospy.get_param('~r_max', 3)
 
         # input is lidar data
         lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
-        rospy.Subscriber(lidarTopic, LaserScan, self.obsDetect)
+        rospy.Subscriber(lidarTopic, LaserScan, self.detectObstacles)
         # and commanded velocity (pre obstaacle detection)
         inVelTopic = rospy.get_param('~in_vel_topic', 'cmd_vel_pre')
-        rospy.Subscriber(inVelTopic, Twist, self.obsAvoid)
+        rospy.Subscriber(inVelTopic, Twist, self.avoidObstacles)
         # output is velocity command (to avoid the obstacle)
         outVelTopic = rospy.get_param('~out_vel_topic', 'cmd_vel')
         self.velPub = rospy.Publisher(outVelTopic, Twist, queue_size = 1)
 
-    def obsDetect(self, msg: LaserScan):
+    def detectObstacles(self, msg: LaserScan):
         # Detect obstacles using incoming LIDAR scan
         self.last_scan = msg
         min_angle = msg.angle_min
@@ -63,14 +64,14 @@ class ObstacleAvoidance:
             readings.append(Obstacle(r=r, theta=angle))
         self.last_readings = readings
 
-    def obsAvoid(self, msg: Twist):
+    def avoidObstacles(self, msg: Twist):
         # Create a twist message
         vel_cmd = Twist()
 
         # Filter out points that are outside the travel circle
-        filtered_points = self.filter_by_drive_circle(
-            msg.linear.x, msg.angular.z, self.last_readings)
-        # Identify the (0, 1, 2) points that need to be avoided
+        filtered_points = self.filterBySemicircleROI(self.last_readings,
+                                                     self.R_MAX)
+        # Identify The (0, 1, 2) points that need to be avoided
         left, right = self.select_closest_obstacles(v, w, filtered_points)
         # Calculate the minimum change to avoid those points
 
@@ -82,19 +83,24 @@ class ObstacleAvoidance:
         # Publish velocity command to avoid obstacle
         self.velPub.publish(vel_cmd)
 
+    def filterBySemicircleROI(ranges,rMax):
+        for range in ranges:
+            if range < rMax:
+                yield range
+
     def filter_by_drive_circle(self, v, w, points):
         if (abs(w) < 0.001):
             # drive stright case
             for point in points:
                 dx = point.r * sin(point.theta)
                 dy = point.r * cos(point.theta)
-                if abs(dx) < self.MAX_WIDTH / 2.:
+                if abs(dx) < self.PATH_WIDTH / 2.:
                     yield point
         else:
             # curved case
             travel_r = v / w
-            min_avoidance_r = travel_r - self.MAX_WIDTH/2.0
-            max_avoidance_r = travel_r + self.MAX_WIDTH/2.0
+            min_avoidance_r = travel_r - self.PATH_WIDTH/2.0
+            max_avoidance_r = travel_r + self.PATH_WIDTH/2.0
             for point in points:
                 dx_robot = point.r * sin(point.theta)
                 dy_robot = point.r * cos(point.theta)
