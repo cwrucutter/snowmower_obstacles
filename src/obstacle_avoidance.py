@@ -35,7 +35,7 @@ Obstacle = namedtuple('Obstacle', ['r', 'theta'])
 
 class ObstacleAvoidance:
     def __init__(self):
-        self.last_scan = []
+        self.listOfRThetaPairs = []
         rospy.init_node('obstacle_avoidance')
 
         self.PATH_WIDTH = rospy.get_param('~path_width', 1)
@@ -51,7 +51,7 @@ class ObstacleAvoidance:
         outVelTopic = rospy.get_param('~out_vel_topic', 'cmd_vel')
         self.velPub = rospy.Publisher(outVelTopic, Twist, queue_size = 1)
 
-    def detectObstacles(self, msg: LaserScan):
+    def detectObstacles(self, msg):
         # Detect obstacles using incoming LIDAR scan
         self.last_scan = msg
         min_angle = msg.angle_min
@@ -62,65 +62,124 @@ class ObstacleAvoidance:
             angle = min_angle + index*angle_increment
             r = range_
             readings.append(Obstacle(r=r, theta=angle))
-        self.last_readings = readings
+        self.listOfRThetaPairs = readings
+        # DEBUG
+        # print(self.listOfRThetaPairs)
 
-    def avoidObstacles(self, msg: Twist):
+    def avoidObstacles(self, msg):
         # Create a twist message
         vel_cmd = Twist()
-
-        # Filter out points that are outside the travel circle
-        filtered_points = self.filterBySemicircleROI(self.last_readings,
-                                                     self.R_MAX)
-        # Identify The (0, 1, 2) points that need to be avoided
-        left, right = self.select_closest_obstacles(v, w, filtered_points)
+        # Filter out points that are outside the Region of Interest (ROI)
+        filteredListOfRThetaPairs = self.filterBySemicircleROI(self.listOfRThetaPairs, self.R_MAX)
         # Calculate the minimum change to avoid those points
-
-        # Choose that as the adjustment to make to cmd_vel
-
+        curvature = self.calculateCurvatureToPassObstacles(msg,self.PATH_WIDTH,filteredListOfRThetaPairs)
+        # DEBUG
+        # print('Old curvature = ' + str(msg.angular.z/msg.linear.x) + ', New Curvature = ' + str(curvature))
         # Do stuff (Currently just a pass through.)
         vel_cmd.linear.x = msg.linear.x
         vel_cmd.angular.z = msg.angular.z
         # Publish velocity command to avoid obstacle
-        self.velPub.publish(vel_cmd)
+        # self.velPub.publish(vel_cmd)
 
-    def filterBySemicircleROI(ranges,rMax):
-        for range in ranges:
-            if range < rMax:
-                yield range
+    def filterBySemicircleROI(self, listOfRThetaPairs, rMax):
+        filteredListOfRThetaPairs = []
+        for rThetaPair in listOfRThetaPairs:
+            if rThetaPair.r < rMax:
+                filteredListOfRThetaPairs.append(rThetaPair)
+        return filteredListOfRThetaPairs
 
-    def filter_by_drive_circle(self, v, w, points):
-        if (abs(w) < 0.001):
-            # drive stright case
-            for point in points:
-                dx = point.r * sin(point.theta)
-                dy = point.r * cos(point.theta)
-                if abs(dx) < self.PATH_WIDTH / 2.:
-                    yield point
+    def calculateCurvatureToPassObstacles(
+            self, velocityPre, pathWidth, filteredListOfRThetaPairs):
+        """Miss the obstacles but deviate from original path the least.
+
+        Find the path that passes all obstacles to the left and the path that
+        passes all obstacles to the right. Then pick the one that deviates
+        from the original path the least.
+
+        Inputs:
+        velocityPre - the current velocity command, used to determine current
+                      curvature.
+        pathWidth - how much room is needed for path to not hit obstacle.
+        filteredListOfRThetaPairs - (r,theta) coordinates of obstacles.
+
+        Outputs:
+        curvature - curvature of the path that misses all obstacles and
+                    deviates from the original curvature the least.
+        """
+        originalCurvature = velocityPre.angular.z/velocityPre.linear.x
+        # DEBUG
+        print('Left')
+        curvatureToPassObstaclesOnLeft = self.calculateCurvatureToPassObstaclesOnLeft(originalCurvature, pathWidth, filteredListOfRThetaPairs)
+        # DEBUG
+        print('Right')
+        curvatureToPassObstaclesOnRight = self.calculateCurvatureToPassObstaclesOnRight(originalCurvature, pathWidth, filteredListOfRThetaPairs)
+        # DEBUG
+        # print('c = ' + str(originalCurvature) + ', cl = ' + str(curvatureToPassObstaclesOnLeft) + ', cr = ' + str(curvatureToPassObstaclesOnRight))
+        # Return whichever curvature deviates least from the original
+        if (abs(curvatureToPassObstaclesOnLeft-originalCurvature) <=
+            abs(curvatureToPassObstaclesOnRight-originalCurvature)):
+            return curvatureToPassObstaclesOnLeft
         else:
-            # curved case
-            travel_r = v / w
-            min_avoidance_r = travel_r - self.PATH_WIDTH/2.0
-            max_avoidance_r = travel_r + self.PATH_WIDTH/2.0
-            for point in points:
-                dx_robot = point.r * sin(point.theta)
-                dy_robot = point.r * cos(point.theta)
-                dx_turning = dx_robot + travel_r
+            return curvatureToPassObstaclesOnRight
 
-                point_turing_radius = math.sqrt(math.pow(dx_turning, 2)+math.pow(dy_robot, 2))
+    def calculateCurvatureToPassObstaclesOnLeft(
+            self, originalCurvature, pathWidth, filteredListOfRThetaPairs):
+        """Find the maximum curvature that will pass all obstacles on the left.
 
-            if (point_turning_radius > min_avoidance_r and
-                    point_turning_radius < max_avoidance_r):
-                yield point
+        The path that passes all obstacles to the left will be the path with
+        the maximum curvature. If the original velocity command has an even
+        higher curvature, use that instead.
 
-    def select_closest_obstacles(self, v, w, points):
-        if len(points) <= 0:
-            return (None, None,)
-        elif len(points) == 1:
-            return (points[0], points[0])
+        Inputs:
+        originalCurvature - determines initial maxCurvature
+        pathWidth - how much room is needed for path to not hit obstacle.
+        filteredListOfRThetaPairs - (r,theta) coordinates of obstacles.
 
-        for index, point in enumerate(points):
-            pass
-        return (points[0], points[1],)
+        Outputs:
+        maxCurvature - max curvature to miss all obstacles or the original
+                       curvature, whichever is greater.
+        """
+        maxCurvature = originalCurvature
+        for rThetaPair in filteredListOfRThetaPairs:
+            x = rThetaPair.r * cos(rThetaPair.theta)
+            y = rThetaPair.r * sin(rThetaPair.theta)
+            radiusOfCurvature = ((x*x) + (y+pathWidth/2)*(y+pathWidth/2)) / (2*(y+pathWidth/2))-pathWidth/2;
+            curvature = 1/radiusOfCurvature
+            # DEBUG
+            print(curvature)
+            if (curvature > maxCurvature):
+                maxCurvature = curvature
+        return maxCurvature
+
+    def calculateCurvatureToPassObstaclesOnRight(
+            self, originalCurvature, pathWidth, filteredListOfRThetaPairs):
+        """Find the minimum curvature that will pass all obstacles on the right
+
+        The path that passes all obstacles to the right will be the path with
+        the minimum curvature. If the original velocity command has an even
+        lower curvature, use that instead.
+
+        Inputs:
+        originalCurvature - determines initial minCurvature
+        pathWidth - how much room is needed for path to not hit obstacle.
+        filteredListOfRThetaPairs - (r,theta) coordinates of obstacles.
+
+        Outputs:
+        minCurvature - minimum curvature to miss all obstacles or the original
+                       curvature, whichever is lower.
+        """
+        minCurvature = originalCurvature
+        for rThetaPair in filteredListOfRThetaPairs:
+            x = rThetaPair.r * cos(rThetaPair.theta)
+            y = rThetaPair.r * sin(rThetaPair.theta)
+            radiusOfCurvature = ((x*x) + (y-pathWidth/2)*(y-pathWidth/2)) / (2*(y-pathWidth/2))+pathWidth/2;
+            curvature = 1/radiusOfCurvature
+            # DEBUG
+            print(curvature)
+            if (curvature < minCurvature):
+                minCurvature = curvature
+        return minCurvature
+
 
 if __name__ == "__main__":
     oa = ObstacleAvoidance()
