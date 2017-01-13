@@ -5,12 +5,14 @@
 %% Create 'num_obs' obstacles at random x,y locations in front of the robot.
 num_obs = 10;
 % Define the box in front of the robot (0:xmax,-ymax:ymax)
-xmax = 10;
-ymax = 10;
+xmax = 1.5;
+xmin = 1;
+ymax = 0;
+ymin = -1;
 % store random x and y points of obstacles in two arrays
-% _tot suffix is used to designate these as all teh obstacles
-x_obs_tot = xmax*rand(num_obs,1);
-y_obs_tot = 2*ymax*rand(num_obs,1)-ymax;
+% _tot suffix is used to designate these as all the obstacles
+x_obs_tot = xmin + (xmax-xmin)*rand(num_obs,1);
+y_obs_tot = ymin + (ymax-ymin)*rand(num_obs,1);
 
 %% Define vehicle (max width and speed)
 % Max width of vehicle
@@ -58,7 +60,7 @@ table_right = sortrows(table,5);
 % between it and the next obstacle.
 n = find(table_left(:,4)>1/R_pre,1);
 dist = sqrt((table_left(n,2)-table_left(n+1,2))^2+(table_left(n,3)-table_left(n+1,3))^2);
-while dist < max_width && n < num_obs
+while dist < max_width && n < num_obs-1
     n = n+1;
     dist = sqrt((table_left(n,2)-table_left(n+1,2))^2+(table_left(n,3)-table_left(n+1,3))^2);
 end
@@ -68,8 +70,8 @@ curvLeft = table_left(n,4);
 % Look right. Find the first obstacle we can pass to its right, with room
 % between it and the next obstacle.
 n = num_obs+1-find(flipud(table_right(:,5))<1/R_pre,1);
-dist = sqrt((table_right(n,2)-table_right(n+1,2))^2+(table_right(n,3)-table_right(n+1,3))^2);
-while dist < max_width && n > 1
+dist = sqrt((table_right(n,2)-table_right(n-1,2))^2+(table_right(n,3)-table_right(n-1,3))^2);
+while dist < max_width && n > 2
     n = n-1;
     dist = sqrt((table_right(n,2)-table_right(n-1,2))^2+(table_right(n,3)-table_right(n-1,3))^2);
 end
@@ -164,5 +166,10 @@ plot(x_right,y_right,'r','LineWidth',2)
     
 hold off
 axis equal
-xlim([0 xmax])
-ylim([-ymax ymax])
+xlim([0 3])
+ylim([-3 3])
+
+%% Make R theta pairs
+r = sqrt(x_obs_tot.^2 + y_obs_tot.^2);
+theta = atan2(y_obs_tot,x_obs_tot);
+

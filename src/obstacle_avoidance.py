@@ -63,8 +63,6 @@ class ObstacleAvoidance:
             r = range_
             readings.append(Obstacle(r=r, theta=angle))
         self.listOfRThetaPairs = readings
-        # DEBUG
-        # print(self.listOfRThetaPairs)
 
     def avoidObstacles(self, msg):
         # Create a twist message
@@ -74,12 +72,12 @@ class ObstacleAvoidance:
         # Calculate the minimum change to avoid those points
         curvature = self.calculateCurvatureToPassObstacles(msg,self.PATH_WIDTH,filteredListOfRThetaPairs)
         # DEBUG
-        # print('Old curvature = ' + str(msg.angular.z/msg.linear.x) + ', New Curvature = ' + str(curvature))
+        print('Old curvature = ' + str(msg.angular.z/msg.linear.x) + ', New Curvature = ' + str(curvature))
         # Do stuff (Currently just a pass through.)
         vel_cmd.linear.x = msg.linear.x
-        vel_cmd.angular.z = msg.angular.z
+        vel_cmd.angular.z = msg.linear.x*curvature
         # Publish velocity command to avoid obstacle
-        # self.velPub.publish(vel_cmd)
+        self.velPub.publish(vel_cmd)
 
     def filterBySemicircleROI(self, listOfRThetaPairs, rMax):
         filteredListOfRThetaPairs = []
@@ -143,10 +141,8 @@ class ObstacleAvoidance:
         for rThetaPair in filteredListOfRThetaPairs:
             x = rThetaPair.r * cos(rThetaPair.theta)
             y = rThetaPair.r * sin(rThetaPair.theta)
-            radiusOfCurvature = ((x*x) + (y+pathWidth/2)*(y+pathWidth/2)) / (2*(y+pathWidth/2))-pathWidth/2;
+            radiusOfCurvature = float(((x*x) + (y+float(pathWidth)/2)*(y+float(pathWidth)/2)) / float(2*(y+float(pathWidth)/2))) - float(pathWidth)/2;
             curvature = 1/radiusOfCurvature
-            # DEBUG
-            print(curvature)
             if (curvature > maxCurvature):
                 maxCurvature = curvature
         return maxCurvature
@@ -172,10 +168,8 @@ class ObstacleAvoidance:
         for rThetaPair in filteredListOfRThetaPairs:
             x = rThetaPair.r * cos(rThetaPair.theta)
             y = rThetaPair.r * sin(rThetaPair.theta)
-            radiusOfCurvature = ((x*x) + (y-pathWidth/2)*(y-pathWidth/2)) / (2*(y-pathWidth/2))+pathWidth/2;
+            radiusOfCurvature = float((x*x) + (y-float(pathWidth)/2)*(y-float(pathWidth)/2)) / float(2*(y-float(pathWidth)/2)) + float(pathWidth)/2;
             curvature = 1/radiusOfCurvature
-            # DEBUG
-            print(curvature)
             if (curvature < minCurvature):
                 minCurvature = curvature
         return minCurvature
