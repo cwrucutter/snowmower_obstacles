@@ -6,5 +6,5 @@
     <remap from="cmd_vel" to="cmd_vel_pre"/>
   </node>
   <!-- Launch the obstacle avoidance node. -->
-  <!-- <node pkg="snowmower_obstacles" type="obstacle_avoidance.py" name="obs_avoid" output="screen"/> -->
+  <node pkg="snowmower_obstacles" type="obstacle_avoidance.py" name="obs_avoid" output="screen"/>
 </launch>
