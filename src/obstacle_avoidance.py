@@ -38,8 +38,8 @@ class ObstacleAvoidance:
         self.listOfRThetaPairs = []
         rospy.init_node('obstacle_avoidance')
 
-        self.PATH_WIDTH = rospy.get_param('~path_width', 1)
-        self.R_MAX = rospy.get_param('~r_max', 3)
+        self.PATH_WIDTH = rospy.get_param('~path_width', 1.3)
+        self.R_MAX = rospy.get_param('~r_max', 2)
 
         # input is lidar data
         lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
