@@ -40,6 +40,8 @@ class ObstacleAvoidance:
 
         self.PATH_WIDTH = rospy.get_param('~path_width', 1.3)
         self.R_MAX = rospy.get_param('~r_max', 2)
+        print('PATH_WIDTH = %s' % (self.PATH_WIDTH,))
+        print('R_MAX = %s' % (self.R_MAX,))
 
         # input is lidar data
         lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
