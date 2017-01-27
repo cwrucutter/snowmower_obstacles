@@ -70,9 +70,11 @@ class ObstacleAvoidance:
         # Create a twist message
         vel_cmd = Twist()
         # Filter out points that are outside the Region of Interest (ROI)
-        filteredListOfRThetaPairs = self.filterBySemicircleROI(self.listOfRThetaPairs, self.R_MAX)
+        filteredListOfRThetaPairs = self.filterBySemicircleROI(
+            self.listOfRThetaPairs, self.R_MAX)
         # Calculate the minimum change to avoid those points
-        curvature = self.calculateCurvatureToPassObstacles(msg,self.PATH_WIDTH,filteredListOfRThetaPairs)
+        curvature = self.calculateCurvatureToPassObstacles(
+            msg,self.PATH_WIDTH,filteredListOfRThetaPairs)
         # DEBUG
         print('Old curvature = ' + str(msg.angular.z/msg.linear.x) + ', New Curvature = ' + str(curvature))
         # Do stuff (Currently just a pass through.)
