@@ -5,6 +5,8 @@
   <node pkg="drive_stack" type="driver_pseudolinear.py" name="driver" output="screen">
     <remap from="cmd_vel" to="cmd_vel_pre"/>
   </node>
+  <!-- Stop sign detection node. -->
+  <node pkg="stopsign" type="stopsign_ros.py" name="stopsign_ros" output="screen"/>
   <!-- Launch the obstacle avoidance node. -->
   <node pkg="snowmower_obstacles" type="obstacle_avoidance.py" name="obs_avoid" output="screen">
     <param name="stopsign_topic" value="stopsign/detected" type="string"/>
