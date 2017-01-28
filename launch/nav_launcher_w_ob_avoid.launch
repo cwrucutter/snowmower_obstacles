@@ -11,4 +11,6 @@
     <param name="r_max" value="2.5" type="double"/>
     <param name="path_width" value="1.8" type="double"/>
   </node>
+  <!-- Launch stopsign detector -->
+  <!-- <node pkg="stopsign" type="stopsign_ros.py" name="stopsign_detector" output="screen"/> -->
 </launch>
