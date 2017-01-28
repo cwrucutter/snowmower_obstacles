@@ -55,7 +55,7 @@ class ObstacleAvoidance:
         lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
         rospy.Subscriber(lidarTopic, LaserScan, self.detectObstacles)
         # and stop sign detector
-        stopsignTopic = rospy.get_param('~stopsign_topic', 'stopsign')
+        stopsignTopic = rospy.get_param('~stopsign_topic', 'stopsign/detected')
         rospy.Subscriber(stopsignTopic, Bool, self.detectStopsign)
         # and commanded velocity (pre obstaacle detection)
         inVelTopic = rospy.get_param('~in_vel_topic', 'cmd_vel_pre')
