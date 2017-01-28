@@ -28,6 +28,7 @@ from math import sin, cos
 
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import Bool
 
 from collections import namedtuple
 
@@ -38,20 +39,51 @@ class ObstacleAvoidance:
         self.listOfRThetaPairs = []
         rospy.init_node('obstacle_avoidance')
 
+        self.previousStopsignSighting = False
+        self.stopTheRobotTOrF = False
+        self.timeSinceStop = rospy.get_time()
+        self.timeSinceStart = rospy.get_time()
+        self.numStops = 0
+
         self.PATH_WIDTH = rospy.get_param('~path_width', 1.3)
         self.R_MAX = rospy.get_param('~r_max', 2)
-        print('PATH_WIDTH = %s' % (self.PATH_WIDTH,))
-        print('R_MAX = %s' % (self.R_MAX,))
+        self.MAX_STOPS = rospy.get_param('~max_stops', 4)
+        self.MAX_STOP_TIME = rospy.get_param('~max_stop_time', 5.0)
+        self.MIN_DRIVE_TIME = rospy.get_param('~min_drive_time', 3.0)
 
         # input is lidar data
         lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
         rospy.Subscriber(lidarTopic, LaserScan, self.detectObstacles)
+        # and stop sign detector
+        stopsignTopic = rospy.get_param('~stopsign_topic', 'stopsign/detected')
+        rospy.Subscriber(stopsignTopic, Bool, self.detectStopsign)
         # and commanded velocity (pre obstaacle detection)
         inVelTopic = rospy.get_param('~in_vel_topic', 'cmd_vel_pre')
         rospy.Subscriber(inVelTopic, Twist, self.avoidObstacles)
         # output is velocity command (to avoid the obstacle)
         outVelTopic = rospy.get_param('~out_vel_topic', 'cmd_vel')
         self.velPub = rospy.Publisher(outVelTopic, Twist, queue_size = 1)
+
+    def detectStopsign(self, msg):
+        now = rospy.get_time()
+        # If we see a stop sign and saw it before and have been moving for so many seconds and we aren't already stopped - then stop
+        if (msg.data and
+            self.previousStopsignSighting and
+            now-self.timeSinceStart > self.MIN_DRIVE_TIME and
+            not self.stopTheRobotTOrF and
+            self.numStops < self.MAX_STOPS):
+            self.stopTheRobotTOrF = True
+            self.timeSinceStop = now
+            self.numStops = self.numStops+1
+            print('Stopping')
+        # drive for at least a certain amount of time before stopping again
+        if (now-self.timeSinceStop > self.MAX_STOP_TIME and
+            self.stopTheRobotTOrF):
+            self.stopTheRobotTOrF = False
+            self.timeSinceStart = now
+            print('Starting')
+        # store previous sighting (needs two in a row to stop)
+        self.previousStopsignSighting = msg.data
 
     def detectObstacles(self, msg):
         # Detect obstacles using incoming LIDAR scan
@@ -77,9 +109,13 @@ class ObstacleAvoidance:
             msg,self.PATH_WIDTH,filteredListOfRThetaPairs)
         # DEBUG
         print('Old curvature = ' + str(msg.angular.z/msg.linear.x) + ', New Curvature = ' + str(curvature))
-        # Do stuff (Currently just a pass through.)
-        vel_cmd.linear.x = msg.linear.x
-        vel_cmd.angular.z = msg.linear.x*curvature
+
+        if (self.stopTheRobotTOrF):
+            vel_cmd.linear.x = 0.0
+            vel_cmd.angular.z = 0.0
+        else:
+            vel_cmd.linear.x = msg.linear.x
+            vel_cmd.angular.z = msg.linear.x*curvature
         # Publish velocity command to avoid obstacle
         self.velPub.publish(vel_cmd)
 
