@@ -6,13 +6,13 @@
     <remap from="cmd_vel" to="cmd_vel_pre"/>
   </node>
   <!-- Stop sign detection node. -->
-  <node pkg="stopsign" type="stopsign_ros.py" name="stopsign_ros" output="screen"/>
+  <!-- <node pkg="stopsign" type="stopsign_ros.py" name="stopsign_ros" output="screen"/> -->
   <!-- Launch the obstacle avoidance node. -->
   <node pkg="snowmower_obstacles" type="obstacle_avoidance.py" name="obs_avoid" output="screen">
     <param name="stopsign_topic" value="stopsign/detected" type="string"/>
     <param name="lidar_topic" value="scan" type="string"/>
-    <param name="r_max" value="2.5" type="double"/>
-    <param name="path_width" value="1.8" type="double"/>
+    <param name="r_max" value="3.5" type="double"/>
+    <param name="path_width" value="2.0" type="double"/>
     <param name="max_stops" value="4" type="int"/>
     <param name="max_stop_time" value="3.0" type="double"/>
     <param name="min_drive_time" value="3.0" type="double"/>
