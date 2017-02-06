@@ -50,6 +50,8 @@ class ObstacleAvoidance:
         self.MAX_STOPS = rospy.get_param('~max_stops', 4)
         self.MAX_STOP_TIME = rospy.get_param('~max_stop_time', 5.0)
         self.MIN_DRIVE_TIME = rospy.get_param('~min_drive_time', 3.0)
+        rospy.loginfo('PATH_WIDTH = ' + str(self.PATH_WIDTH))
+        rospy.loginfo('R_MAX = ' + str(self.R_MAX))
 
         # input is lidar data
         lidarTopic = rospy.get_param('~lidar_topic', 'base_scan')
