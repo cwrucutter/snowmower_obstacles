@@ -1,10 +1,14 @@
 <launch>
-  <!-- Launch the path, leader, and driver for navigation. -->
-  <node pkg="drive_stack" type="path.py" name="path" output="screen"/>
-  <node pkg="drive_stack" type="leader_nonlinear_force.py" name="leader" output="screen"/>
-  <node pkg="drive_stack" type="driver_pseudolinear.py" name="driver" output="screen">
-    <remap from="cmd_vel" to="cmd_vel_pre"/>
-  </node>
+
+  <!-- get the path from the command line or another launch file -->
+  <arg name="path" />
+
+  <!-- Start the drive stack and remap cmd_vel to cmd_vel_pre for obs avoid -->
+  <include file="$(find drive_stack)/launch/nav_launcher.launch">
+    <arg name="path" value="$(arg path)" />
+    <arg name="cmd_vel_topic" value="cmd_vel_pre" />
+  </include>
+
   <!-- Stop sign detection node. -->
   <!-- <node pkg="stopsign" type="stopsign_ros.py" name="stopsign_ros" output="screen"/> -->
   <!-- Launch the obstacle avoidance node. -->
@@ -19,4 +23,5 @@
   </node>
   <!-- Launch stopsign detector -->
   <!-- <node pkg="stopsign" type="stopsign_ros.py" name="stopsign_detector" output="screen"/> -->
+
 </launch>
