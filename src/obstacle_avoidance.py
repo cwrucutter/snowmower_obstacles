@@ -24,7 +24,7 @@
 
 import rospy
 import math
-from math import sin, cos
+from math import sin, cos, pi
 
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
@@ -47,6 +47,8 @@ class ObstacleAvoidance:
 
         self.PATH_WIDTH = rospy.get_param('~path_width', 1.3)
         self.R_MAX = rospy.get_param('~r_max', 2)
+        self.THETA_MIN = rospy.get_param('~theta_min', -pi/2)
+        self.THETA_MAX = rospy.get_param('~theta_max', pi/2)
         self.MAX_STOPS = rospy.get_param('~max_stops', 4)
         self.MAX_STOP_TIME = rospy.get_param('~max_stop_time', 5.0)
         self.MIN_DRIVE_TIME = rospy.get_param('~min_drive_time', 3.0)
@@ -105,7 +107,7 @@ class ObstacleAvoidance:
         vel_cmd = Twist()
         # Filter out points that are outside the Region of Interest (ROI)
         filteredListOfRThetaPairs = self.filterBySemicircleROI(
-            self.listOfRThetaPairs, self.R_MAX)
+            self.listOfRThetaPairs, self.R_MAX, self.THETA_MIN, self.THETA_MAX)
         # Calculate the minimum change to avoid those points
         curvature = self.calculateCurvatureToPassObstacles(
             msg,self.PATH_WIDTH,filteredListOfRThetaPairs)
@@ -121,10 +123,11 @@ class ObstacleAvoidance:
         # Publish velocity command to avoid obstacle
         self.velPub.publish(vel_cmd)
 
-    def filterBySemicircleROI(self, listOfRThetaPairs, rMax):
+    def filterBySemicircleROI(self, listOfRThetaPairs, rMax,
+                              thetaMin, thetaMax):
         filteredListOfRThetaPairs = []
         for rThetaPair in listOfRThetaPairs:
-            if rThetaPair.r < rMax:
+            if rThetaPair.r < rMax and rThetaPair.theta >= thetaMin and rThetaPair.theta <= thetaMax:
                 filteredListOfRThetaPairs.append(rThetaPair)
         return filteredListOfRThetaPairs
 
