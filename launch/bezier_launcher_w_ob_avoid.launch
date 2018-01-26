@@ -1,0 +1,29 @@
+<launch>
+
+  <!-- get the path from the command line or another launch file -->
+  <arg name="path" />
+
+  <!-- Start the drive stack and remap cmd_vel to cmd_vel_pre for obs avoid -->
+  <include file="$(find drive_stack)/launch/bezier_launcher.launch">
+    <arg name="path" value="$(arg path)" />
+    <arg name="cmd_vel_topic" value="cmd_vel_pre" />
+  </include>
+
+  <!-- Stop sign detection node. -->
+  <!-- <node pkg="stopsign" type="stopsign_ros.py" name="stopsign_ros" output="screen"/> -->
+  <!-- Launch the obstacle avoidance node. -->
+  <node pkg="snowmower_obstacles" type="obstacle_avoidance.py" name="obs_avoid" output="screen">
+    <param name="stopsign_topic" value="stopsign/detected" type="string"/>
+    <param name="lidar_topic" value="scan" type="string"/>
+    <param name="r_max" value="3.5" type="double"/>
+    <param name="theta_min" value="-1.57079632679" type="double"/>
+    <param name="theta_max" value="1.57079632679" type="double"/>
+    <param name="path_width" value="1.0" type="double"/>
+    <param name="max_stops" value="4" type="int"/>
+    <param name="max_stop_time" value="3.0" type="double"/>
+    <param name="min_drive_time" value="3.0" type="double"/>
+  </node>
+  <!-- Launch stopsign detector -->
+  <!-- <node pkg="stopsign" type="stopsign_ros.py" name="stopsign_detector" output="screen"/> -->
+
+</launch>
