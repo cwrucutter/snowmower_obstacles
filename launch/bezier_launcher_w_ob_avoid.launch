@@ -15,7 +15,7 @@
   <node pkg="snowmower_obstacles" type="obstacle_avoidance.py" name="obs_avoid" output="screen">
     <param name="stopsign_topic" value="stopsign/detected" type="string"/>
     <param name="lidar_topic" value="scan" type="string"/>
-    <param name="r_max" value="3.5" type="double"/>
+    <param name="r_max" value="2.0" type="double"/>
     <param name="theta_min" value="-1.57079632679" type="double"/>
     <param name="theta_max" value="1.57079632679" type="double"/>
     <param name="path_width" value="1.0" type="double"/>
