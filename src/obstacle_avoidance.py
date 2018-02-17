@@ -112,7 +112,7 @@ class ObstacleAvoidance:
         curvature = self.calculateCurvatureToPassObstacles(
             msg,self.PATH_WIDTH,filteredListOfRThetaPairs)
         # DEBUG
-        print('Old curvature = ' + str(msg.angular.z/msg.linear.x) + ', New Curvature = ' + str(curvature))
+        # print('Old curvature = ' + str(msg.angular.z/msg.linear.x) + ', New Curvature = ' + str(curvature))
 
         if (self.stopTheRobotTOrF):
             vel_cmd.linear.x = 0.0
@@ -151,10 +151,10 @@ class ObstacleAvoidance:
         """
         originalCurvature = velocityPre.angular.z/velocityPre.linear.x
         # DEBUG
-        print('Left')
+        # print('Left')
         curvatureToPassObstaclesOnLeft = self.calculateCurvatureToPassObstaclesOnLeft(originalCurvature, pathWidth, filteredListOfRThetaPairs)
         # DEBUG
-        print('Right')
+        # print('Right')
         curvatureToPassObstaclesOnRight = self.calculateCurvatureToPassObstaclesOnRight(originalCurvature, pathWidth, filteredListOfRThetaPairs)
         # DEBUG
         # print('c = ' + str(originalCurvature) + ', cl = ' + str(curvatureToPassObstaclesOnLeft) + ', cr = ' + str(curvatureToPassObstaclesOnRight))
