@@ -72,7 +72,7 @@ class ObstacleAvoidance:
         now = rospy.get_time()
         # If we see a stop sign and saw it before and have been moving for so many seconds and we aren't already stopped - then stop
         if (msg.data and
-            self.previousStopsignSighting and
+            True and
             now-self.timeSinceStart > self.MIN_DRIVE_TIME and
             not self.stopTheRobotTOrF and
             self.numStops < self.MAX_STOPS):
